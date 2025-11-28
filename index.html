@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Katalog G version</title>
+  <style>
+    :root{
+      --bg:#0b1220; --card:#fff; --muted:#9aa4b2; --accent1:#d63b3b; --accent2:#1e90ff; --accent1-600:#b83232; --accent2-600:#1877e6; --radius:12px; --gap:14px; --maxw:1100px; --shadow:0 12px 30px rgba(2,8,23,0.6);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui,Arial;background:linear-gradient(160deg,#061022 0%,#071227 60%);color:#fff}
+    .wrap{max-width:var(--maxw);margin:20px auto;padding:20px}
+    header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+    .brand{display:flex;gap:12px;align-items:center}
+    .logo{width:56px;height:56px;border-radius:10px;background:linear-gradient(45deg,var(--accent2),var(--accent1));display:flex;align-items:center;justify-content:center;font-weight:800}
+    h1{margin:0;font-size:20px}
+    .muted{color:var(--muted)}
+
+    /* layout */
+    .layout{display:grid;grid-template-columns:320px 1fr;gap:20px}
+    @media(max-width:900px){.layout{grid-template-columns:1fr}}
+
+    aside{background:#0e1622;padding:16px;border-radius:12px}
+    .chip{display:inline-block;padding:8px 12px;border-radius:999px;background:#0f1b2a;margin:6px;color:var(--muted);cursor:pointer}
+    .chip.active{background:linear-gradient(90deg,var(--accent1),var(--accent2));color:#fff}
+
+    main{background:var(--card);color:#111;padding:18px;border-radius:12px}
+    .catalog-head{display:flex;justify-content:space-between;align-items:center}
+
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;margin-top:18px}
+    .card{background:linear-gradient(180deg,#fff,#fbfbfb);border-radius:10px;padding:12px;display:flex;flex-direction:column;min-height:320px;box-shadow:var(--shadow)}
+    .media{height:160px;border-radius:8px;overflow:hidden;background:linear-gradient(180deg,rgba(30,144,255,0.05),rgba(214,59,59,0.02));display:flex;align-items:center;justify-content:center;border:1px solid rgba(0,0,0,0.05)}
+    .media img{width:100%;height:100%;object-fit:cover}
+    .title{font-weight:700}
+    .price{color:var(--accent1);font-weight:700;margin-top:6px}
+    .specs{color:var(--muted);font-size:13px}
+    .actions{margin-top:auto;display:flex;gap:8px}
+    .btn{padding:8px 12px;border-radius:8px;border:none;cursor:pointer;font-weight:700}
+    .btn.detail{background:linear-gradient(90deg,var(--accent2),var(--accent2-600));color:#fff}
+    .btn.order{background:linear-gradient(90deg,var(--accent1),var(--accent1-600));color:#fff}
+
+    /* modal */
+    .modal-backdrop{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);z-index:200}
+    .modal{width:min(900px,96%);background:#fff;color:#111;border-radius:12px;padding:16px;display:flex;gap:12px}
+    .m-left{flex:0 0 420px}
+    .m-left img{width:100%;height:320px;object-fit:cover;border-radius:8px}
+    .m-right{flex:1}
+
+    /* admin */
+    .admin-panel{background:#0e1622;padding:12px;border-radius:10px;margin-top:18px}
+    input,select,textarea{width:100%;padding:8px;border-radius:6px;border:1px solid #223040;margin-top:8px;background:#071022;color:#fff}
+    .row{display:flex;gap:8px}
+    .col{flex:1}
+    table{width:100%;border-collapse:collapse;margin-top:10px}
+    th,td{padding:8px;border-bottom:1px solid #223040}
+    .danger{background:var(--accent1);color:#fff}
+    .success{background:var(--accent2);color:#fff}
+
+    .note{font-size:13px;color:var(--muted);margin-top:8px}
+    .connect-box{background:#081423;padding:12px;border-radius:8px}
+
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo">DK</div>
+        <div>
+          <h1>DuniaKomputerTulis.id — Katalog</h1>
+          <div class="muted">Admin via GitHub (otomatis commit ke repo)</div>
+        </div>
+      </div>
+      <div class="muted">Pastikan token GitHub (PAT) punya scope <code>repo</code></div>
+    </header>
+
+    <div class="layout">
+      <aside>
+        <h3>Pengaturan GitHub (admin)</h3>
+        <div class="connect-box">
+          <div class="note">Masukkan data repo GitHub yang akan menyimpan file produk dan gambar.</div>
+          <label>Owner (user/org)</label>
+          <input id="ghOwner" placeholder="contoh: username-or-org" />
+          <label>Repo</label>
+          <input id="ghRepo" placeholder="contoh: katalog" />
+          <label>Branch</label>
+          <input id="ghBranch" placeholder="contoh: main" value="main" />
+          <label>Personal Access Token (PAT)</label>
+          <input id="ghToken" placeholder="Token (sangat sensitif)" />
+          <div class="note">Token disimpan di localStorage browser (jika pilih). Jangan share token ini.</div>
+          <div style="margin-top:8px"><button id="btnConnect" class="success">Connect & Load Data</button></div>
+        </div>
+
+        <div style="margin-top:12px">
+          <h4>Brand & Logo</h4>
+          <div class="note">Upload logo (akan di-commit ke repo)</div>
+          <input type="file" id="logoFile" accept="image/*" />
+          <button id="btnUploadLogo" style="margin-top:8px" class="success">Upload Logo ke repo</button>
+          <div id="logoStatus" class="note"></div>
+        </div>
+
+        <div style="margin-top:12px">
+          <h4>Medsos & CP</h4>
+          <label>Nama Contact</label>
+          <input id="cpName" placeholder="Nama admin" />
+          <label>Nomor WA (628... tanpa +)</label>
+          <input id="waNumber" placeholder="6281991122334" />
+          <button id="saveSettings" class="success" style="margin-top:8px">Simpan Settings ke repo</button>
+          <div class="note">Settings akan disimpan ke file <code>katalog/settings.json</code> di repo.</div>
+        </div>
+
+      </aside>
+
+      <main>
+        <div class="catalog-head">
+          <h2>Daftar Produk</h2>
+          <div class="muted">(disimpan di repo: <span id="repoInfo">belum terhubung</span>)</div>
+        </div>
+
+        <div id="productGrid" class="grid"></div>
+
+        <div class="admin-panel">
+          <h3>Admin - Tambah / Edit Produk</h3>
+          <div class="note">Gunakan form di bawah untuk tambah/edit produk. Gambar bisa di-upload dan akan di-commit ke repo.</div>
+
+          <div style="margin-top:12px;display:grid;gap:8px">
+            <input id="prodId" type="hidden">
+            <label>Nama Produk</label><input id="prodName" />
+            <label>Brand</label><input id="prodBrand" />
+            <label>Harga (angka tanpa Rp)</label><input id="prodPrice" />
+            <label>Ringkasan</label><input id="prodShort" />
+            <label>Spesifikasi (baris baru dipisah)</label><textarea id="prodSpecs" rows="3"></textarea>
+            <label>Pilih Gambar (upload ke repo)</label><input id="prodImageFile" type="file" accept="image/*" />
+            <label>Atau masukkan URL gambar (opsional)</label><input id="prodImageUrl" placeholder="https://..." />
+
+            <div style="display:flex;gap:8px">
+              <button id="btnSaveProduct" class="success">Simpan (commit ke repo)</button>
+              <button id="btnClearForm">Bersihkan</button>
+            </div>
+          </div>
+
+          <h4 style="margin-top:18px">Daftar Produk (dari repo)</h4>
+          <table id="productsTable"><thead><tr><th>Nama</th><th>Brand</th><th>Harga</th><th>Aksi</th></tr></thead><tbody></tbody></table>
+        </div>
+
+      </main>
+    </div>
+
+    <footer class="muted" style="text-align:center;margin-top:18px">© <span id="year"></span> DuniaKomputerTulis.id</footer>
+  </div>
+
+  <!-- modal detail -->
+  <div id="modalBackdrop" class="modal-backdrop"><div class="modal"><div class="m-left"><img id="modalImage" src="https://via.placeholder.com/900x600?text=No+Image"></div><div class="m-right"><h3 id="modalTitle">Judul</h3><div id="modalShort" class="muted"></div><div id="modalPrice" style="color:var(--accent1);font-weight:800;margin-top:10px"></div><div style="margin-top:12px" id="modalSpecs"></div><div style="margin-top:12px"><button id="modalOrder" class="btn order">Order via WA</button> <button id="closeModal" class="btn detail">Tutup</button></div></div></div></div>
+
+<script>
+/* ==================================================
+   IMPORTANT SAFETY NOTES (read BEFORE using)
+   - This admin UI directly uses your GitHub Personal Access Token (PAT) in the browser.
+   - A PAT with "repo" scope allows modifying repository contents. Treat it as highly sensitive.
+   - Recommended: create a dedicated minimal repo + dedicated short-lived PAT, revoke after use.
+   - If you want server-side safety, create a small server to proxy GitHub API calls.
+   ==================================================
+*/
+
+// ---------- Utilities for GitHub API ----------
+let GH = {
+  owner: '', repo: '', branch: 'main', token: ''
+};
+
+function setGhFromInputs(){
+  GH.owner = document.getElementById('ghOwner').value.trim();
+  GH.repo = document.getElementById('ghRepo').value.trim();
+  GH.branch = document.getElementById('ghBranch').value.trim() || 'main';
+  GH.token = document.getElementById('ghToken').value.trim();
+  if(GH.token) localStorage.setItem('gh_token', GH.token); // optional convenience
+}
+
+function apiUrl(path){
+  return `https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${path}`;
+}
+
+async function ghGetFile(path){
+  // GET file metadata & content
+  const url = apiUrl(path) + `?ref=${encodeURIComponent(GH.branch)}`;
+  const r = await fetch(url, { headers: { Authorization: `token ${GH.token}` } });
+  if(!r.ok) throw new Error('GET file failed: '+r.status);
+  return r.json();
+}
+
+async function ghPutFile(path, contentBase64, message, sha=null){
+  // PUT to create/update file
+  const body = { message: message || 'Update via admin UI', content: contentBase64, branch: GH.branch };
+  if(sha) body.sha = sha;
+  const url = apiUrl(path);
+  const r = await fetch(url, {
+    method:'PUT',
+    headers: { Authorization: `token ${GH.token}`, 'Content-Type':'application/json' },
+    body: JSON.stringify(body)
+  });
+  if(!r.ok) {
+    const txt = await r.text();
+    throw new Error('PUT failed: '+r.status+' '+txt);
+  }
+  return r.json();
+}
+
+// read local token if present (convenience)
+if(localStorage.getItem('gh_token')) document.getElementById('ghToken').value = localStorage.getItem('gh_token');
+
+document.getElementById('btnConnect').addEventListener('click', async ()=>{
+  try{
+    setGhFromInputs();
+    if(!GH.owner||!GH.repo||!GH.token){ alert('Isi owner, repo, dan token.'); return; }
+    document.getElementById('repoInfo').innerText = `${GH.owner}/${GH.repo}@${GH.branch}`;
+    // try to load products.json (katalog/products.json)
+    await loadProductsFromRepo();
+    alert('Terhubung & data dimuat dari repo.');
+  }catch(e){
+    console.error(e); alert('Gagal connect: '+e.message);
+  }
+});
+
+/* ==================================================
+   Data model: kita simpan produk di path: katalog/products.json
+   Gambar akan di-upload ke: katalog/images/<timestamp>_<name>
+   Settings (WA, cp) disimpan di: katalog/settings.json
+   ================================================== */
+
+let products = [];
+let productsSha = null; // sha of katalog/products.json
+let settings = { cpName:'', waNumber:'' };
+
+async function loadProductsFromRepo(){
+  try{
+    // try load settings
+    try{
+      const s = await ghGetFile('katalog/settings.json');
+      const decoded = atob(s.content.replace(/
+/g,''));
+      settings = JSON.parse(decoded);
+      document.getElementById('cpName').value = settings.cpName || '';
+      document.getElementById('waNumber').value = settings.waNumber || '';
+    }catch(_){ console.log('no settings yet'); }
+
+    const res = await ghGetFile('katalog/products.json');
+    const decoded = atob(res.content.replace(/
+/g,''));
+    products = JSON.parse(decoded || '[]');
+    productsSha = res.sha;
+    renderGrid();
+    renderProductsTable();
+  }catch(e){
+    // if file not found, initialize empty products and create file
+    if(e.message && e.message.includes('404')){
+      products = [];
+      productsSha = null;
+      await saveProductsToRepo('Inisialisasi produk (create)');
+      renderGrid();
+      renderProductsTable();
+    }else{
+      console.error(e); throw e;
+    }
+  }
+}
+
+async function saveProductsToRepo(message){
+  // encode JSON
+  const content = btoa(unescape(encodeURIComponent(JSON.stringify(products, null, 2))));
+  try{
+    const resp = await ghPutFile('katalog/products.json', content, message, productsSha);
+    productsSha = resp.content.sha;
+    return resp;
+  }catch(e){ throw e; }
+}
+
+async function uploadImageFile(file){
+  // read file as base64
+  const b64 = await new Promise((res,rej)=>{
+    const fr = new FileReader();
+    fr.onload = ()=>res(fr.result.split(',')[1]);
+    fr.onerror = rej;
+    fr.readAsDataURL(file);
+  });
+  // build path
+  const safeName = file.name.replace(/[^a-zA-Z0-9_\-\.]/g,'_');
+  const path = `katalog/images/${Date.now()}_${safeName}`;
+  const msg = `Upload image ${safeName} via admin UI`;
+  const uploaded = await ghPutFile(path, b64, msg);
+  // raw URL:
+  const raw = `https://raw.githubusercontent.com/${GH.owner}/${GH.repo}/${GH.branch}/${encodeURIComponent(path)}`;
+  return { path, raw, sha: uploaded.content.sha };
+}
+
+/* ==================================================
+   UI: render grid & modal
+   ================================================== */
+const grid = document.getElementById('productGrid');
+const modalBackdrop = document.getElementById('modalBackdrop');
+const modalImage = document.getElementById('modalImage');
+const modalTitle = document.getElementById('modalTitle');
+const modalShort = document.getElementById('modalShort');
+const modalPrice = document.getElementById('modalPrice');
+const modalSpecs = document.getElementById('modalSpecs');
+const modalOrder = document.getElementById('modalOrder');
+
+document.getElementById('year').innerText = new Date().getFullYear();
+
+defaultOrderMessage = (p)=> `Halo ${document.getElementById('cpName').value||'Admin'}, saya tertarik ${p.name} (kode:${p.id||''}).`;
+
+function renderGrid(){
+  grid.innerHTML = '';
+  products.forEach((p, idx)=>{
+    const card = document.createElement('div'); card.className='card';
+    card.innerHTML = `
+      <div class="media"><img src="${p.image}" alt="${p.name}"></div>
+      <div style="padding:8px 0"><div class="title">${p.name}</div><div class="price">Rp ${Number(p.price).toLocaleString('id-ID')}</div><div class="specs">${p.short||''}</div></div>
+      <div class="actions">
+        <button class="btn detail" data-action="detail">Lihat</button>
+        <a class="btn order" data-action="order" href="#">Order WA</a>
+      </div>
+    `;
+    grid.appendChild(card);
+    // attach listeners to nodes inside card
+    const btnDetail = card.querySelector('[data-action="detail"]');
+    btnDetail.addEventListener('click', ()=>openDetail(idx));
+    const btnOrder = card.querySelector('[data-action="order"]');
+    btnOrder.href = `https://wa.me/${document.getElementById('waNumber').value||''}?text=${encodeURIComponent(defaultOrderMessage(p))}`;
+    btnOrder.target='_blank';
+  });
+}
+
+function openDetail(idx){
+  const p = products[idx];
+  modalImage.src = p.image;
+  modalTitle.innerText = p.name;
+  modalShort.innerText = p.short||'';
+  modalPrice.innerText = 'Rp '+Number(p.price).toLocaleString('id-ID');
+  modalSpecs.innerText = p.specs||'';
+  modalOrder.onclick = ()=> window.open(`https://wa.me/${document.getElementById('waNumber').value||''}?text=${encodeURIComponent(defaultOrderMessage(p))}`,'_blank');
+  modalBackdrop.style.display='flex';
+}
+
+document.getElementById('closeModal').addEventListener('click', ()=> modalBackdrop.style.display='none');
+modalBackdrop.addEventListener('click', (e)=>{ if(e.target===modalBackdrop) modalBackdrop.style.display='none'; });
+
+/* ==================================================
+   Admin: product form save -> possibly upload image -> update products.json
+   ================================================== */
+
+async function handleSaveProduct(){
+  try{
+    setGhFromInputs();
+    if(!GH.token) throw new Error('Token GitHub belum diisi.');
+    const idHidden = document.getElementById('prodId').value;
+    const name = document.getElementById('prodName').value.trim();
+    const brand = document.getElementById('prodBrand').value.trim();
+    const price = Number(document.getElementById('prodPrice').value.replace(/[^0-9]/g,'')) || 0;
+    const short = document.getElementById('prodShort').value.trim();
+    const specs = document.getElementById('prodSpecs').value.trim();
+    const fileInput = document.getElementById('prodImageFile');
+    const urlInput = document.getElementById('prodImageUrl').value.trim();
+    let imageUrl = urlInput || '';
+
+    if(fileInput.files && fileInput.files.length>0){
+      const up = await uploadImageFile(fileInput.files[0]);
+      imageUrl = up.raw;
+      document.getElementById('prodImageFile').value = '';
+    }
+
+    if(!imageUrl) throw new Error('Gambar belum dipilih atau URL kosong');
+
+    if(idHidden){
+      // edit
+      const idx = Number(idHidden);
+      products[idx] = { ...products[idx], name, brand, price, short, specs, image: imageUrl };
+      await saveProductsToRepo(`Edit produk: ${name}`);
+      alert('Produk diupdate & di-commit');
+    } else {
+      // add new
+      products.push({ id: Date.now(), name, brand, price, short, specs, image: imageUrl });
+      await saveProductsToRepo(`Tambah produk: ${name}`);
+      alert('Produk ditambah & di-commit');
+    }
+    // refresh grid
+    renderGrid(); renderProductsTable(); clearForm();
+  }catch(e){ console.error(e); alert('Gagal simpan: '+e.message); }
+}
+
+document.getElementById('btnSaveProduct').addEventListener('click', (ev)=>{ ev.preventDefault(); handleSaveProduct(); });
+
+document.getElementById('btnClearForm').addEventListener('click',(e)=>{ e.preventDefault(); clearForm(); });
+
+function clearForm(){ document.getElementById('prodId').value=''; document.getElementById('prodName').value=''; document.getElementById('prodBrand').value=''; document.getElementById('prodPrice').value=''; document.getElementById('prodShort').value=''; document.getElementById('prodSpecs').value=''; document.getElementById('prodImageUrl').value=''; }
+
+/* ==================================================
+   Admin: render products table with edit/delete buttons
+   ================================================== */
+function renderProductsTable(){
+  const tbody = document.querySelector('#productsTable tbody'); tbody.innerHTML='';
+  products.forEach((p,i)=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${p.name}</td><td>${p.brand||''}</td><td>Rp ${Number(p.price).toLocaleString('id-ID')}</td><td><button onclick="startEdit(${i})">Edit</button> <button onclick="deleteProduct(${i})" style="background:var(--accent1);color:#fff">Hapus</button></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function startEdit(i){ const p=products[i]; document.getElementById('prodId').value=i; document.getElementById('prodName').value=p.name; document.getElementById('prodBrand').value=p.brand||''; document.getElementById('prodPrice').value=p.price; document.getElementById('prodShort').value=p.short||''; document.getElementById('prodSpecs').value=p.specs||''; document.getElementById('prodImageUrl').value=p.image||''; window.scrollTo(0,0); }
+
+async function deleteProduct(i){ if(!confirm('Hapus produk ini?')) return; products.splice(i,1); await saveProductsToRepo('Hapus produk'); renderGrid(); renderProductsTable(); }
+
+/* ==================================================
+   Upload logo handler (commit to repo path katalog/logo.png)
+   ================================================== */
+document.getElementById('btnUploadLogo').addEventListener('click', async ()=>{
+  try{
+    setGhFromInputs();
+    if(!document.getElementById('logoFile').files.length) return alert('Pilih file logo dulu');
+    const file = document.getElementById('logoFile').files[0];
+    const data = await uploadImageFile(file);
+    // after upload, store in settings file the logo path
+    settings.logo = data.raw;
+    settings.cpName = document.getElementById('cpName').value;
+    settings.waNumber = document.getElementById('waNumber').value;
+    await saveSettingsToRepo();
+    document.getElementById('logoStatus').innerText = 'Logo diupload & settings disimpan.';
+  }catch(e){ console.error(e); alert('Gagal upload logo: '+e.message); }
+});
+
+async function saveSettingsToRepo(){
+  const content = btoa(unescape(encodeURIComponent(JSON.stringify(settings, null, 2))));
+  try{
+    // check if exists to get sha
+    let sha=null;
+    try{ const r = await ghGetFile('katalog/settings.json'); sha = r.sha; }catch(_){ sha=null; }
+    await ghPutFile('katalog/settings.json', content, 'Update settings via admin UI', sha);
+    return true;
+  }catch(e){ throw e; }
+}
+
+/* ==================================================
+   Save settings button (without logo)
+   ================================================== */
+document.getElementById('saveSettings').addEventListener('click', async ()=>{
+  try{
+    setGhFromInputs();
+    settings.cpName = document.getElementById('cpName').value;
+    settings.waNumber = document.getElementById('waNumber').value;
+    await saveSettingsToRepo();
+    alert('Settings disimpan ke repo.');
+  }catch(e){ console.error(e); alert('Gagal simpan settings: '+e.message); }
+});
+
+/* ==================================================
+   HELPERS: initial load if token present in localStorage
+   ================================================== */
+(async ()=>{
+  const token = localStorage.getItem('gh_token');
+  if(token){ document.getElementById('ghToken').value = token; }
+  // not auto connect for safety; user must click Connect
+})();
+
+</script>
+</body>
+</html>
+
